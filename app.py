@@ -82,8 +82,8 @@ biomasa_nombres = df_biomasa["Biomass residue"].tolist()
 biomasa_seleccionada = st.sidebar.selectbox("Selecciona tipo de biomasa:", biomasa_nombres)
 fila_biomasa_original = df_biomasa[df_biomasa["Biomass residue"] == biomasa_seleccionada].iloc[0].copy()
 
-humedad_objetivo = st.sidebar.slider("Humedad objetivo (%)", 1.0, 25.0, 10.0, 0.1)
-temperatura = st.sidebar.slider("Temperatura (°C)", 600, 1000, 800, 10)
+humedad_objetivo = st.sidebar.slider("Humedad objetivo (%)", 0.0, 30.0, 10.0, 5)
+temperatura = st.sidebar.slider("Temperatura (°C)", 600, 1100, 800, 10)
 
 tipo_agente = st.sidebar.selectbox("Tipo de agente gasificante:", ["Aire", "Oxígeno", "Vapor de agua"])
 
@@ -96,7 +96,7 @@ if tipo_agente == "Aire":
     ratio_agente = st.sidebar.selectbox("ABR (aire/biomasa)", abr_range_air)
 elif tipo_agente == "Oxígeno":
     ratio_agente = st.sidebar.selectbox("ABR (O2/biomasa)", abr_range_oxygen)
-elif tipo_agente == "Vapor de agua":
+else:
     ratio_agente = st.sidebar.selectbox("SBR (vapor/biomasa)", sbr_range)
     
 # Rebalancear composición

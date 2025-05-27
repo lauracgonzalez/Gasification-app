@@ -1,69 +1,11 @@
-# Check the current requirements.txt to see what might be causing the error
-with open('requirements.txt', 'r') as f:
-    current_requirements = f.read()
-    
-print("Current requirements.txt content:")
-print(current_requirements)
-print("---")
+streamlit>=1.28.0
 
-# Create a more specific requirements.txt with exact versions that work well together
-fixed_requirements = """streamlit>=1.28.0
 pandas>=1.5.0
+
 joblib>=1.3.0
+
 numpy>=1.24.0
+
 openpyxl>=3.1.0
+
 scikit-learn>=1.3.0
-"""
-
-with open('requirements_fixed.txt', 'w') as f:
-    f.write(fixed_requirements)
-
-print("Created fixed requirements.txt with specific versions")
-print("Fixed requirements content:")
-print(fixed_requirements)
-
-# Replace the original requirements.txt with the fixed version
-import shutil
-shutil.move('requirements_fixed.txt', 'requirements.txt')
-
-print("Updated requirements.txt with specific versions to fix deployment error")
-
-# Also create a minimal requirements.txt as backup
-minimal_requirements = """streamlit
-pandas
-joblib
-numpy
-openpyxl
-scikit-learn
-"""
-
-with open('requirements_minimal.txt', 'w') as f:
-    f.write(minimal_requirements)
-
-print("Created backup minimal requirements file")
-print("Files ready for deployment:")
-
-# Check final files for deployment
-import os
-
-files = ['app.py', 'biomass_compositions.xlsx', 'regressor_bootstrap.pkl', 'requirements.txt']
-existing_files = []
-missing_files = []
-
-for file in files:
-    if os.path.exists(file):
-        existing_files.append(file)
-    else:
-        missing_files.append(file)
-
-print("Deployment files status:")
-print("Existing files:", existing_files)
-print("Missing files:", missing_files)
-
-# Show final requirements.txt
-with open('requirements.txt', 'r') as f:
-    final_requirements = f.read()
-    
-print("\
-Final requirements.txt:")
-print(final_requirements)

@@ -18,9 +18,9 @@ print(df_biomasa.columns.tolist())
 # --- Required Functions ---
 def rebalancear_composicion(fila_biomasa, humedad_objetivo):
     # Map the correct column names from the Excel file
-    seco = fila_biomasa[["C_norm", "H_norm", "O_norm", "N_norm", "S_norm", "Ash [%] _norm", "VM [%] _norm", "FC [%] _norm"]] * (1 - humedad_objetivo / 100)
+    seco = fila_biomasa[["C_norm", "H_norm", "O_norm", "N_norm", "S_norm", "Cl_norm","Ash [%] _norm", "VM [%] _norm", "FC [%] _norm"]] * (1 - humedad_objetivo / 100)
     # Rename columns to match model expectations
-    seco.index = ["C", "H", "O", "N", "S", "Ash", "VM", "FC"]
+    seco.index = ["C", "H", "O", "N", "S","Cl", "Ash", "VM", "FC"]
     h2o = pd.Series([humedad_objetivo], index=["Humedad"])
     return pd.concat([seco, h2o])
     
@@ -66,7 +66,7 @@ temperatura = st.sidebar.slider("Temperatura (°C)", 600, 1000, 800, 10)
 
 # Gasifying agent
 tipo_agente = st.sidebar.selectbox("Tipo de agente gasificante:", 
-                                  ["Aire", "Oxígeno", "Vapor de agua", "Mezcla O2 + H2O"])
+                                  ["Aire", "Oxígeno", "Vapor de agua"])
 ratio_agente = st.sidebar.slider("Ratio agente/biomasa", 0.1, 3.0, 1.0, 0.1)
 
 # Show current biomass composition
@@ -77,8 +77,9 @@ with col1:
     st.metric("Hidrógeno (%)", f"{fila_biomasa['H_norm']:.2f}")
     st.metric("Oxígeno (%)", f"{fila_biomasa['O_norm']:.2f}")
     st.metric("Nitrógeno (%)", f"{fila_biomasa['N_norm']:.2f}")
-with col2:
     st.metric("Azufre (%)", f"{fila_biomasa['S_norm']:.2f}")
+with col2:
+    st.metric("Cloruro (%)", f"{fila_biomasa['Cl_norm']:.2f}")
     st.metric("Cenizas (%)", f"{fila_biomasa['Ash [%] _norm']:.2f}")
     st.metric("Materia volátil (%)", f"{fila_biomasa['VM [%] _norm']:.2f}")
     st.metric("Carbono fijo (%)", f"{fila_biomasa['FC [%] _norm']:.2f}")
@@ -98,6 +99,7 @@ if st.button("Predecir composición de syngas"):
         "O_norm": comp_rebalanceada["O"],
         "N_norm": comp_rebalanceada["N"],
         "S_norm": comp_rebalanceada["S"],
+        "Cl_norm": comp_rebalanceada["Cl"],
         "Ash [%] _norm": comp_rebalanceada["Ash"],
         "VM [%] _norm": comp_rebalanceada["VM"],
         "FC [%] _norm": comp_rebalanceada["FC"],

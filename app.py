@@ -139,7 +139,7 @@ composicion_biomasa = {
     "N": fila_biomasa["N_norm"],
     "S": fila_biomasa["S_norm"],
     "Cl": fila_biomasa["Cl_norm"],
-    "Cenizas": fila_biomasa["Ash [%] _norm"]
+    "Cenizas": fila_biomasa["Ash [%] _norm"],
     "Humedad": humedad_objetivo
 }
 labels = list(composicion_biomasa.keys())

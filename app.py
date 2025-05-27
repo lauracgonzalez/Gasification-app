@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import joblib
 
 # Cargar el modelo entrenado
@@ -13,8 +14,6 @@ except FileNotFoundError:
 df_biomasa = pd.read_excel("biomass_compositions.xlsx")
 
 # --- Funciones ---
-
-# Función para rebalancear la composición de la biomasa en base al contenido de humedad
 def rebalance_composition(biomass_data, new_moisture):
     old_moisture = biomass_data.get('Moisture content', 0)
     dry_basis_factor = (100 - old_moisture)
@@ -91,7 +90,6 @@ temperatura = st.sidebar.slider("Temperatura (°C)", 600, 1000, 800, 10)
 
 tipo_agente = st.sidebar.selectbox("Tipo de agente gasificante:", ["Aire", "Oxígeno", "Vapor de agua"])
 
-# Ratio dinámico según tipo de agente
 abr_range_air = np.round(np.linspace(0.14, 0.30, num=3), 2)
 abr_range_oxygen = np.round(np.linspace(0.2, 0.4, num=3), 2)
 sbr_range = np.round(np.linspace(0.84, 1.1, num=3), 2)
@@ -102,13 +100,10 @@ elif tipo_agente == "Oxígeno":
     ratio_agente = st.sidebar.selectbox("ABR (O2/biomasa)", abr_range_oxygen)
 else:
     ratio_agente = st.sidebar.selectbox("SBR (vapor/biomasa)", sbr_range)
-    
-# Rebalancear composición
-fila_biomasa_rebalanceada = rebalance_composition(fila_biomasa_original.copy(), humedad_objetivo)
-fracciones_agente = calcular_fracciones_agente(tipo_agente, ratio_agente)
 
 # Rebalancear composición
 fila_biomasa = rebalance_composition(fila_biomasa_original.copy(), humedad_objetivo)
+fracciones_agente = calcular_fracciones_agente(tipo_agente, ratio_agente)
 
 # Mostrar composición rebalanceada
 st.subheader("Composición de biomasa rebalanceada")
@@ -137,15 +132,11 @@ with col2:
 
 # Botón de predicción
 if st.button("Predecir composición de syngas"):
-    fracciones = calcular_fracciones_agente(tipo_agente, ratio_agente)
-    lhv = calcular_lhv(fila_biomasa['C_norm'], fila_biomasa['H_norm'], fila_biomasa['O_norm'],
-                       fila_biomasa['N_norm'], fila_biomasa['S_norm'], fila_biomasa['Ash [%] _norm'], humedad_objetivo)
-
     entrada = pd.DataFrame([{
         'Gasification temperature [°C]': temperatura,
-        'O2_gasifying agent (wt/wt)': fracciones["O2"],
-        'N2_gasifying agent (wt/wt)': fracciones["N2"],
-        'Steam_gasifying agent (wt/wt)': fracciones["H2O"],
+        'O2_gasifying agent (wt/wt)': fracciones_agente["O2"],
+        'N2_gasifying agent (wt/wt)': fracciones_agente["N2"],
+        'Steam_gasifying agent (wt/wt)': fracciones_agente["H2O"],
         'C_norm': fila_biomasa["C_norm"],
         'H_norm': fila_biomasa["H_norm"],
         'O_norm': fila_biomasa["O_norm"],
@@ -155,7 +146,7 @@ if st.button("Predecir composición de syngas"):
         'VM [%] _norm': fila_biomasa["VM [%] _norm"],
         'Ash [%] _norm': fila_biomasa["Ash [%] _norm"],
         'FC [%] _norm': fila_biomasa["FC [%] _norm"],
-        'Biomass Energy Content (LHV) [MJ/kg]': lhv,
+        'Biomass Energy Content (LHV) [MJ/kg]': lhv_mostrado,
         'Intrinsic moisture content [%]': humedad_objetivo
     }])
 
@@ -183,4 +174,3 @@ if st.button("Predecir composición de syngas"):
     except Exception as e:
         st.error(f"Error en la predicción: {str(e)}")
         st.write("Verifique que el modelo sea compatible con las características de entrada.")
-

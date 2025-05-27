@@ -169,7 +169,7 @@ if st.button("Predecir composición syngas"):
         col1, col2 = st.columns(2)
         with col1: st.metric("Relación H₂/CO syngas", f"{h2_co:.2f}")
         with col2: st.metric("Contenido energético syngas [MJ/Nm³]", f"{fuel_energy:.2f}")
-        st.info(f"**Aplicación uso syngas:** {aplicacion}")
+        st.info(f"**Aplicación uso final syngas:** {aplicacion}")
 
     except Exception as e:
         st.error(f"Error en la predicción: {str(e)}")

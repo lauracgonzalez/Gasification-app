@@ -13,14 +13,37 @@ except FileNotFoundError:
 df_biomasa = pd.read_excel("biomass_compositions.xlsx")
 
 # --- Funciones ---
-def rebalancear_composicion(fila_biomasa, humedad_objetivo):
-    seco = fila_biomasa[[
-        "C_norm", "H_norm", "O_norm", "N_norm", "S_norm", "Cl_norm",
-        "Ash [%] _norm", "VM [%] _norm", "FC [%] _norm"
-    ]] * (1 - humedad_objetivo / 100)
-    seco.index = ["C", "H", "O", "N", "S", "Cl", "Ash", "VM", "FC"]
-    h2o = pd.Series([humedad_objetivo], index=["Humedad"])
-    return pd.concat([seco, h2o])
+
+# Función para rebalancear la composición de la biomasa en base al contenido de humedad
+def rebalance_composition(biomass_data, new_moisture):
+    old_moisture = biomass_data.get('Moisture content', 0)
+    dry_basis_factor = (100 - old_moisture)
+
+    vm_norm = biomass_data['VM [%] _norm'] * dry_basis_factor
+    fc_norm = biomass_data['FC [%] _norm'] * dry_basis_factor
+    ash_content = biomass_data['Ash [%] _norm'] * dry_basis_factor
+    proximate_dry_sum = vm_norm + fc_norm + ash_content
+    scale_factor_proximate = (100 - new_moisture) / proximate_dry_sum
+    biomass_data['VM [%] _norm'] = vm_norm * scale_factor_proximate
+    biomass_data['FC [%] _norm'] = fc_norm * scale_factor_proximate
+    biomass_data['Ash [%] _norm'] = ash_content * scale_factor_proximate
+
+    c_norm = biomass_data['C_norm'] * dry_basis_factor
+    h_norm = biomass_data['H_norm'] * dry_basis_factor
+    o_norm = biomass_data['O_norm'] * dry_basis_factor
+    n_norm = biomass_data['N_norm'] * dry_basis_factor
+    s_norm = biomass_data['S_norm'] * dry_basis_factor
+    cl_norm = biomass_data['Cl_norm'] * dry_basis_factor
+    ultimate_dry_sum = c_norm + h_norm + o_norm + n_norm + s_norm + cl_norm + ash_content
+    scale_factor_ultimate = (100 - new_moisture) / ultimate_dry_sum
+    biomass_data['C_norm'] = c_norm * scale_factor_ultimate
+    biomass_data['H_norm'] = h_norm * scale_factor_ultimate
+    biomass_data['O_norm'] = o_norm * scale_factor_ultimate
+    biomass_data['N_norm'] = n_norm * scale_factor_ultimate
+    biomass_data['S_norm'] = s_norm * scale_factor_ultimate
+    biomass_data['Cl_norm'] = cl_norm * scale_factor_ultimate
+    biomass_data['Intrinsic moisture content [%]'] = new_moisture
+    return biomass_data
 
 def calcular_fracciones_agente(tipo, ratio):
     if tipo == "Aire":
@@ -34,7 +57,6 @@ def calcular_fracciones_agente(tipo, ratio):
     else:
         return {"O2": 0, "N2": 0, "H2O": 0}
 
-# Función para calcular el LHV a partir de la composición
 def calcular_lhv(C, H, O, N, S, ash, moisture):
     lhv = 0.349 * C + 1.178 * H + 0.1005 * S - 0.1034 * O - 0.0151 * N - 0.0211 * ash - 0.244 * moisture
     return max(3.5, lhv)
@@ -56,21 +78,20 @@ st.write("Predice la composición del syngas basado en biomasa y condiciones de 
 # Parámetros de entrada
 st.sidebar.header("Parámetros de entrada")
 
-# Selección de biomasa
 biomasa_nombres = df_biomasa["Biomass residue"].tolist()
 biomasa_seleccionada = st.sidebar.selectbox("Selecciona tipo de biomasa:", biomasa_nombres)
-fila_biomasa = df_biomasa[df_biomasa["Biomass residue"] == biomasa_seleccionada].iloc[0]
+fila_biomasa_original = df_biomasa[df_biomasa["Biomass residue"] == biomasa_seleccionada].iloc[0].copy()
 
-# Parámetros de gasificación
 humedad_objetivo = st.sidebar.slider("Humedad objetivo (%)", 0.0, 50.0, 10.0, 0.1)
 temperatura = st.sidebar.slider("Temperatura (°C)", 600, 1000, 800, 10)
-
-tipo_agente = st.sidebar.selectbox("Tipo de agente gasificante:", 
-                                   ["Aire", "Oxígeno", "Vapor de agua", "Mezcla O2 + H2O"])
+tipo_agente = st.sidebar.selectbox("Tipo de agente gasificante:", ["Aire", "Oxígeno", "Vapor de agua", "Mezcla O2 + H2O"])
 ratio_agente = st.sidebar.slider("Ratio agente/biomasa", 0.1, 3.0, 1.0, 0.1)
 
-# Mostrar composición de la biomasa
-st.subheader("Composición de biomasa seleccionada")
+# Rebalancear composición
+fila_biomasa = rebalance_composition(fila_biomasa_original.copy(), humedad_objetivo)
+
+# Mostrar composición rebalanceada
+st.subheader("Composición de biomasa rebalanceada")
 col1, col2 = st.columns(2)
 with col1:
     st.metric("Carbono (%)", f"{fila_biomasa['C_norm']:.2f}")
@@ -83,8 +104,6 @@ with col2:
     st.metric("Cenizas (%)", f"{fila_biomasa['Ash [%] _norm']:.2f}")
     st.metric("Materia volátil (%)", f"{fila_biomasa['VM [%] _norm']:.2f}")
     st.metric("Carbono fijo (%)", f"{fila_biomasa['FC [%] _norm']:.2f}")
-
-    # Mostrar LHV calculado con humedad objetivo
     lhv_mostrado = calcular_lhv(
         fila_biomasa['C_norm'],
         fila_biomasa['H_norm'],
@@ -98,35 +117,28 @@ with col2:
 
 # Botón de predicción
 if st.button("Predecir composición de syngas"):
-    # Rebalanceo composicional
-    comp = rebalancear_composicion(fila_biomasa, humedad_objetivo)
-
-    # Fracciones del agente
     fracciones = calcular_fracciones_agente(tipo_agente, ratio_agente)
+    lhv = calcular_lhv(fila_biomasa['C_norm'], fila_biomasa['H_norm'], fila_biomasa['O_norm'],
+                       fila_biomasa['N_norm'], fila_biomasa['S_norm'], fila_biomasa['Ash [%] _norm'], humedad_objetivo)
 
-    # Calcular LHV
-    lhv = calcular_lhv(comp["C"], comp["H"], comp["O"], comp["N"], comp["S"], comp["Ash"], humedad_objetivo)
-
-    # Crear input para el modelo
     entrada = pd.DataFrame([{
         'Gasification temperature [°C]': temperatura,
         'O2_gasifying agent (wt/wt)': fracciones["O2"],
         'N2_gasifying agent (wt/wt)': fracciones["N2"],
         'Steam_gasifying agent (wt/wt)': fracciones["H2O"],
-        'C_norm': comp["C"],
-        'H_norm': comp["H"],
-        'O_norm': comp["O"],
-        'N_norm': comp["N"],
-        'S_norm': comp["S"],
-        'Cl_norm': comp["Cl"],
-        'VM [%] _norm': comp["VM"],
-        'Ash [%] _norm': comp["Ash"],
-        'FC [%] _norm': comp["FC"],
+        'C_norm': fila_biomasa["C_norm"],
+        'H_norm': fila_biomasa["H_norm"],
+        'O_norm': fila_biomasa["O_norm"],
+        'N_norm': fila_biomasa["N_norm"],
+        'S_norm': fila_biomasa["S_norm"],
+        'Cl_norm': fila_biomasa["Cl_norm"],
+        'VM [%] _norm': fila_biomasa["VM [%] _norm"],
+        'Ash [%] _norm': fila_biomasa["Ash [%] _norm"],
+        'FC [%] _norm': fila_biomasa["FC [%] _norm"],
         'Biomass Energy Content (LHV) [MJ/kg]': lhv,
         'Intrinsic moisture content [%]': humedad_objetivo
     }])
 
-    # Predicción
     try:
         prediccion = modelo.predict(entrada)
         ch4, co, h2 = prediccion[0]
@@ -134,25 +146,18 @@ if st.button("Predecir composición de syngas"):
         st.success("Predicción completada")
 
         col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("CH₄ (%)", f"{ch4:.2f}")
-        with col2:
-            st.metric("CO (%)", f"{co:.2f}")
-        with col3:
-            st.metric("H₂ (%)", f"{h2:.2f}")
+        with col1: st.metric("CH₄ (%)", f"{ch4:.2f}")
+        with col2: st.metric("CO (%)", f"{co:.2f}")
+        with col3: st.metric("H₂ (%)", f"{h2:.2f}")
 
-        # Indicadores
         h2_co = h2 / co if co != 0 else 0
         fuel_energy = (0.126 * h2) + (0.108 * co) + (0.358 * ch4) + ((h2 / 100) * 1.2 * 2.45)
         aplicacion = sugerir_aplicacion(h2_co, fuel_energy)
 
         st.subheader("Análisis del syngas")
         col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Relación H₂/CO", f"{h2_co:.2f}")
-        with col2:
-            st.metric("Contenido energético [MJ/m³]", f"{fuel_energy:.2f}")
-
+        with col1: st.metric("Relación H₂/CO", f"{h2_co:.2f}")
+        with col2: st.metric("Contenido energético [MJ/m³]", f"{fuel_energy:.2f}")
         st.info(f"**Aplicación recomendada del syngas:** {aplicacion}")
 
     except Exception as e:

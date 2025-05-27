@@ -34,6 +34,11 @@ def calcular_fracciones_agente(tipo, ratio):
     else:
         return {"O2": 0, "N2": 0, "H2O": 0}
 
+# Función para calcular el LHV a partir de la composición
+def calcular_lhv(C, H, O, N, S, ash, moisture):
+    lhv = 0.349 * C + 1.178 * H + 0.1005 * S - 0.1034 * O - 0.0151 * N - 0.0211 * ash - 0.244 * moisture
+    return max(3.5, lhv)
+
 def sugerir_aplicacion(h2_co, fuel_energy):
     if fuel_energy >= 3.0 and h2_co < 1.8:
         return "Heat/Power"
@@ -61,7 +66,7 @@ humedad_objetivo = st.sidebar.slider("Humedad objetivo (%)", 0.0, 50.0, 10.0, 0.
 temperatura = st.sidebar.slider("Temperatura (°C)", 600, 1000, 800, 10)
 
 tipo_agente = st.sidebar.selectbox("Tipo de agente gasificante:", 
-                                   ["Aire", "Oxígeno", "Vapor de agua"])
+                                   ["Aire", "Oxígeno", "Vapor de agua", "Mezcla O2 + H2O"])
 ratio_agente = st.sidebar.slider("Ratio agente/biomasa", 0.1, 3.0, 1.0, 0.1)
 
 # Mostrar composición de la biomasa
@@ -82,27 +87,30 @@ with col2:
 # Botón de predicción
 if st.button("Predecir composición de syngas"):
     # Rebalanceo composicional
-    comp_rebalanceada = rebalancear_composicion(fila_biomasa, humedad_objetivo)
+    comp = rebalancear_composicion(fila_biomasa, humedad_objetivo)
 
     # Fracciones del agente
     fracciones = calcular_fracciones_agente(tipo_agente, ratio_agente)
 
-    # Crear input para el modelo con columnas correctas
+    # Calcular LHV
+    lhv = calcular_lhv(comp["C"], comp["H"], comp["O"], comp["N"], comp["S"], comp["Ash"], humedad_objetivo)
+
+    # Crear input para el modelo
     entrada = pd.DataFrame([{
         'Gasification temperature [°C]': temperatura,
         'O2_gasifying agent (wt/wt)': fracciones["O2"],
         'N2_gasifying agent (wt/wt)': fracciones["N2"],
         'Steam_gasifying agent (wt/wt)': fracciones["H2O"],
-        'C_norm': comp_rebalanceada["C"],
-        'H_norm': comp_rebalanceada["H"],
-        'O_norm': comp_rebalanceada["O"],
-        'N_norm': comp_rebalanceada["N"],
-        'S_norm': comp_rebalanceada["S"],
-        'Cl_norm': comp_rebalanceada["Cl"],
-        'VM [%] _norm': comp_rebalanceada["VM"],
-        'Ash [%] _norm': comp_rebalanceada["Ash"],
-        'FC [%] _norm': comp_rebalanceada["FC"],
-        'Biomass Energy Content (LHV) [MJ/kg]': fila_biomasa['Biomass Energy Content (LHV) [MJ/kg]'],
+        'C_norm': comp["C"],
+        'H_norm': comp["H"],
+        'O_norm': comp["O"],
+        'N_norm': comp["N"],
+        'S_norm': comp["S"],
+        'Cl_norm': comp["Cl"],
+        'VM [%] _norm': comp["VM"],
+        'Ash [%] _norm': comp["Ash"],
+        'FC [%] _norm': comp["FC"],
+        'Biomass Energy Content (LHV) [MJ/kg]': lhv,
         'Intrinsic moisture content [%]': humedad_objetivo
     }])
 

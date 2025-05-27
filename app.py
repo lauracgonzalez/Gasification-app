@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-import matplotlib.pyplot as plt  # <-- Import necesario
+import matplotlib.pyplot as plt
 
 # --- Estilos personalizados ---
 st.markdown("""
@@ -57,7 +57,6 @@ def rebalance_composition(biomass_data, new_moisture):
     biomass_data['S_norm'] = s_dry * scale_factor_ultimate
     biomass_data['Cl_norm'] = cl_dry * scale_factor_ultimate
 
-    # Humedad nueva
     biomass_data['Intrinsic moisture content [%]'] = new_moisture
     return biomass_data
 
@@ -89,9 +88,7 @@ def sugerir_aplicacion(h2_co, fuel_energy):
 
 # --- Interfaz ---
 st.title("Predictor para la composición del gas de síntesis")
-st.write("Predice la composición del syngas basado en las propiedades intrínsecas de la biomasa y condiciones de gasificación")
 
-# Parámetros de entrada
 st.sidebar.header("Parámetros de entrada")
 biomasa_nombres = df_biomasa["Biomass residue"].tolist()
 biomasa_seleccionada = st.sidebar.selectbox("Selecciona tipo de biomasa:", biomasa_nombres)
@@ -112,11 +109,10 @@ elif tipo_agente == "Oxígeno":
 else:
     ratio_agente = st.sidebar.selectbox("SBR (vapor/biomasa)", sbr_range)
 
-# Rebalancear composición
 fila_biomasa = rebalance_composition(fila_biomasa_original.copy(), humedad_objetivo)
 fracciones_agente = calcular_fracciones_agente(tipo_agente, ratio_agente)
 
-# Mostrar composición rebalanceada
+# Composición rebalanceada
 st.subheader("Composición análisis último y próximo biomasa")
 col1, col2 = st.columns(2)
 with col1:
@@ -137,8 +133,17 @@ with col2:
     )
     st.metric("Poder calorífico biomasa (LHV) [MJ/kg]", f"{lhv_mostrado:.2f}")
 
-# Gráfico de pastel - composición de biomasa
+# Gráfico de pastel
 st.subheader("Distribución elementos (wt%) - Biomasa")
+composicion_biomasa = {
+    "C": fila_biomasa["C_norm"],
+    "H": fila_biomasa["H_norm"],
+    "O": fila_biomasa["O_norm"],
+    "N": fila_biomasa["N_norm"],
+    "S": fila_biomasa["S_norm"],
+    "Cl": fila_biomasa["Cl_norm"],
+    "Ash": fila_biomasa["Ash [%] _norm"]
+}
 labels = list(composicion_biomasa.keys())
 sizes = list(composicion_biomasa.values())
 fig1, ax1 = plt.subplots()
@@ -195,4 +200,3 @@ if st.button("Predecir composición syngas"):
 
     except Exception as e:
         st.error(f"Error en la predicción: {str(e)}")
-        st.write("Verifique que el modelo sea compatible con las características de entrada.")

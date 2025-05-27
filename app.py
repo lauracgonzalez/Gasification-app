@@ -87,7 +87,7 @@ def sugerir_aplicacion(h2_co, fuel_energy):
         return "Other"
 
 # --- Interfaz ---
-st.title("Predictor para la composición del gas de sintesís")
+st.title("Predictor para la composición del gas de síntesis")
 st.write("Predice la composición del syngas basado en las propiedades intrínsecas de la biomasa y condiciones de gasificación")
 
 # Parámetros de entrada
@@ -142,7 +142,7 @@ with col2:
     )
     st.metric("Poder calorífico biomasa (LHV) [MJ/kg]", f"{lhv_mostrado:.2f}")
 
- Gráfico de pastel - Composición de la biomasa
+# Gráfico de pastel - Composición de la biomasa
 st.subheader("Distribución elementos (wt%) - Biomasa")
 composicion_biomasa = {
     "C": fila_biomasa['C_norm'],
@@ -192,13 +192,13 @@ if st.button("Predecir composición syngas"):
         with col2: st.metric("CO (mol%)", f"{co:.2f}")
         with col3: st.metric("H₂ (mol%)", f"{h2:.2f}")
 
-   # Gráfico de pastel - Composición syngas predicha
-    st.subheader("Composición predicha del syngas (mol%)")
-    df_syngas = pd.DataFrame({
-        'Componente': ['CH₄', 'CO', 'H₂'],
-        'Fracción': [ch4, co, h2]
-    })
-    st.pyplot(df_syngas.set_index('Componente').plot.pie(y='Fracción', autopct='%1.1f%%', legend=False, ylabel='').figure)
+        # Gráfico de pastel - Composición syngas predicha
+        st.subheader("Composición predicha del syngas (mol%)")
+        df_syngas = pd.DataFrame({
+            'Componente': ['CH₄', 'CO', 'H₂'],
+            'Fracción': [ch4, co, h2]
+        })
+        st.pyplot(df_syngas.set_index('Componente').plot.pie(y='Fracción', autopct='%1.1f%%', legend=False, ylabel='').figure)
 
         h2_co = h2 / co if co != 0 else 0
         fuel_energy = (0.126 * h2) + (0.108 * co) + (0.358 * ch4) + ((h2 / 100) * 1.2 * 2.45)

@@ -207,7 +207,7 @@ st.sidebar.info("""
 - Steam ratio: 0.1-3.0
 - Humedad: 0-50%
 """)
-'''
+
 
 # Save the updated app.py
 with open('app.py', 'w', encoding='utf-8') as f:

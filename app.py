@@ -19,29 +19,33 @@ def rebalance_composition(biomass_data, new_moisture):
     old_moisture = biomass_data.get('Moisture content', 0)
     dry_basis_factor = (100 - old_moisture)
 
-    vm_norm = biomass_data['VM [%] _norm'] * dry_basis_factor
-    fc_norm = biomass_data['FC [%] _norm'] * dry_basis_factor
-    ash_content = biomass_data['Ash [%] _norm'] * dry_basis_factor
-    proximate_dry_sum = vm_norm + fc_norm + ash_content
+    # Rebalanceo de análisis próximo
+    vm_dry = biomass_data['VM [%] _norm'] * dry_basis_factor / 100
+    fc_dry = biomass_data['FC [%] _norm'] * dry_basis_factor / 100
+    ash_dry = biomass_data['Ash [%] _norm'] * dry_basis_factor / 100
+    proximate_dry_sum = vm_dry + fc_dry + ash_dry
     scale_factor_proximate = (100 - new_moisture) / proximate_dry_sum
-    biomass_data['VM [%] _norm'] = vm_norm * scale_factor_proximate
-    biomass_data['FC [%] _norm'] = fc_norm * scale_factor_proximate
-    biomass_data['Ash [%] _norm'] = ash_content * scale_factor_proximate
+    biomass_data['VM [%] _norm'] = vm_dry * scale_factor_proximate
+    biomass_data['FC [%] _norm'] = fc_dry * scale_factor_proximate
+    biomass_data['Ash [%] _norm'] = ash_dry * scale_factor_proximate
 
-    c_norm = biomass_data['C_norm'] * dry_basis_factor
-    h_norm = biomass_data['H_norm'] * dry_basis_factor
-    o_norm = biomass_data['O_norm'] * dry_basis_factor
-    n_norm = biomass_data['N_norm'] * dry_basis_factor
-    s_norm = biomass_data['S_norm'] * dry_basis_factor
-    cl_norm = biomass_data['Cl_norm'] * dry_basis_factor
-    ultimate_dry_sum = c_norm + h_norm + o_norm + n_norm + s_norm + cl_norm + ash_content
+    # Rebalanceo de análisis último
+    c_dry = biomass_data['C_norm'] * dry_basis_factor / 100
+    h_dry = biomass_data['H_norm'] * dry_basis_factor / 100
+    o_dry = biomass_data['O_norm'] * dry_basis_factor / 100
+    n_dry = biomass_data['N_norm'] * dry_basis_factor / 100
+    s_dry = biomass_data['S_norm'] * dry_basis_factor / 100
+    cl_dry = biomass_data['Cl_norm'] * dry_basis_factor / 100
+    ultimate_dry_sum = c_dry + h_dry + o_dry + n_dry + s_dry + cl_dry + ash_dry
     scale_factor_ultimate = (100 - new_moisture) / ultimate_dry_sum
-    biomass_data['C_norm'] = c_norm * scale_factor_ultimate
-    biomass_data['H_norm'] = h_norm * scale_factor_ultimate
-    biomass_data['O_norm'] = o_norm * scale_factor_ultimate
-    biomass_data['N_norm'] = n_norm * scale_factor_ultimate
-    biomass_data['S_norm'] = s_norm * scale_factor_ultimate
-    biomass_data['Cl_norm'] = cl_norm * scale_factor_ultimate
+    biomass_data['C_norm'] = c_dry * scale_factor_ultimate
+    biomass_data['H_norm'] = h_dry * scale_factor_ultimate
+    biomass_data['O_norm'] = o_dry * scale_factor_ultimate
+    biomass_data['N_norm'] = n_dry * scale_factor_ultimate
+    biomass_data['S_norm'] = s_dry * scale_factor_ultimate
+    biomass_data['Cl_norm'] = cl_dry * scale_factor_ultimate
+
+    # Humedad nueva
     biomass_data['Intrinsic moisture content [%]'] = new_moisture
     return biomass_data
 

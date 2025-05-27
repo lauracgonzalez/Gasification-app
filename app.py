@@ -6,7 +6,7 @@ import joblib
 modelo = joblib.load("regressor_bootstrap.pkl")
 
 # Composiciones base de biomasas (ejemplo)
-df_biomasa = pd.read_xlsx("biomass_compositions.xlsx") 
+df_biomasa = pd.read_excel("biomass_compositions.xlsx") 
 
 # --- Funciones necesarias ---
 def rebalancear_composicion(fila_biomasa, humedad_objetivo):

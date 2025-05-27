@@ -82,7 +82,7 @@ biomasa_nombres = df_biomasa["Biomass residue"].tolist()
 biomasa_seleccionada = st.sidebar.selectbox("Selecciona tipo de biomasa:", biomasa_nombres)
 fila_biomasa_original = df_biomasa[df_biomasa["Biomass residue"] == biomasa_seleccionada].iloc[0].copy()
 
-humedad_objetivo = st.sidebar.slider("Humedad objetivo (%)", 0.0, 30.0, 10.0, 5)
+humedad_objetivo = st.sidebar.slider("Humedad objetivo (%)", 0.0, 30.0, 10.0, 0.5)
 temperatura = st.sidebar.slider("Temperatura (°C)", 600, 1100, 800, 10)
 
 tipo_agente = st.sidebar.selectbox("Tipo de agente gasificante:", ["Aire", "Oxígeno", "Vapor de agua"])

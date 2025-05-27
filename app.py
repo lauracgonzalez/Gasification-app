@@ -76,26 +76,25 @@ with col1:
     st.metric("Carbono (%)", f"{fila_biomasa['C_norm']:.2f}")
     st.metric("Hidrógeno (%)", f"{fila_biomasa['H_norm']:.2f}")
     st.metric("Oxígeno (%)", f"{fila_biomasa['O_norm']:.2f}")
-    
-with col2:
     st.metric("Nitrógeno (%)", f"{fila_biomasa['N_norm']:.2f}")
     st.metric("Azufre (%)", f"{fila_biomasa['S_norm']:.2f}")
     st.metric("Cloruro (%)", f"{fila_biomasa['Cl_norm']:.2f}")
+with col2:
     st.metric("Cenizas (%)", f"{fila_biomasa['Ash [%] _norm']:.2f}")
     st.metric("Materia volátil (%)", f"{fila_biomasa['VM [%] _norm']:.2f}")
     st.metric("Carbono fijo (%)", f"{fila_biomasa['FC [%] _norm']:.2f}")
 
-# Mostrar LHV calculado con humedad objetivo
-lhv_mostrado = calcular_lhv(
-    fila_biomasa['C_norm'],
-    fila_biomasa['H_norm'],
-    fila_biomasa['O_norm'],
-    fila_biomasa['N_norm'],
-    fila_biomasa['S_norm'],
-    fila_biomasa['Ash [%] _norm'],
-    humedad_objetivo
-)
-st.metric("Poder calorífico biomasa (LHV) [MJ/kg]", f"{lhv_mostrado:.2f}")
+    # Mostrar LHV calculado con humedad objetivo
+    lhv_mostrado = calcular_lhv(
+        fila_biomasa['C_norm'],
+        fila_biomasa['H_norm'],
+        fila_biomasa['O_norm'],
+        fila_biomasa['N_norm'],
+        fila_biomasa['S_norm'],
+        fila_biomasa['Ash [%] _norm'],
+        humedad_objetivo
+    )
+    st.metric("Poder calorífico biomasa (LHV) [MJ/kg]", f"{lhv_mostrado:.2f}")
 
 # Botón de predicción
 if st.button("Predecir composición de syngas"):

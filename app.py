@@ -195,7 +195,7 @@ if st.button("Predecir composición syngas"):
         # Gráfico de pastel syngas
         st.subheader("Composición predicha del syngas (mol%)")
         fig2, ax2 = plt.subplots()
-        ax2.pie([ch4, co, h2], labels=["CH₄", "CO", "H₂"], autopct='%1.1f%%')
+        ax2.pie([ch4, co, h2], labels=["CH₄ (mol%)", "CO (mol%)", "H₂ (mol%)"], autopct='%1.1f%%')
         ax2.axis("equal")
         st.pyplot(fig2)
 

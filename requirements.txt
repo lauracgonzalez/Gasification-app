@@ -1,42 +1,69 @@
-# Create a requirements.txt file for deployment
-requirements = """streamlit
+# Check the current requirements.txt to see what might be causing the error
+with open('requirements.txt', 'r') as f:
+    current_requirements = f.read()
+    
+print("Current requirements.txt content:")
+print(current_requirements)
+print("---")
+
+# Create a more specific requirements.txt with exact versions that work well together
+fixed_requirements = """streamlit>=1.28.0
+pandas>=1.5.0
+joblib>=1.3.0
+numpy>=1.24.0
+openpyxl>=3.1.0
+scikit-learn>=1.3.0
+"""
+
+with open('requirements_fixed.txt', 'w') as f:
+    f.write(fixed_requirements)
+
+print("Created fixed requirements.txt with specific versions")
+print("Fixed requirements content:")
+print(fixed_requirements)
+
+# Replace the original requirements.txt with the fixed version
+import shutil
+shutil.move('requirements_fixed.txt', 'requirements.txt')
+
+print("Updated requirements.txt with specific versions to fix deployment error")
+
+# Also create a minimal requirements.txt as backup
+minimal_requirements = """streamlit
 pandas
 joblib
 numpy
 openpyxl
+scikit-learn
 """
 
-with open('requirements.txt', 'w') as f:
-    f.write(requirements)
+with open('requirements_minimal.txt', 'w') as f:
+    f.write(minimal_requirements)
 
-# Create a simple README for deployment instructions
-readme = """# Syngas Composition Predictor
+print("Created backup minimal requirements file")
+print("Files ready for deployment:")
 
-## Files needed for deployment:
-1. streamlit_app_corrected.py (main app)
-2. biomass_compositions.xlsx (biomass data)
-3. regressor_bootstrap.pkl (trained model - NOT PROVIDED)
-4. requirements.txt (dependencies)
+# Check final files for deployment
+import os
 
-## To deploy:
-1. Upload all files to your Streamlit deployment platform
-2. Make sure regressor_bootstrap.pkl is included
-3. Run: streamlit run streamlit_app_corrected.py
+files = ['app.py', 'biomass_compositions.xlsx', 'regressor_bootstrap.pkl', 'requirements.txt']
+existing_files = []
+missing_files = []
 
-## Fixed issues:
-- Column name mapping (C_norm → C, etc.)
-- Complete sugerir_aplicacion() function
-- Error handling for missing model file
-- Proper encoding and structure
-"""
+for file in files:
+    if os.path.exists(file):
+        existing_files.append(file)
+    else:
+        missing_files.append(file)
 
-with open('README.md', 'w', encoding='utf-8') as f:
-    f.write(readme)
+print("Deployment files status:")
+print("Existing files:", existing_files)
+print("Missing files:", missing_files)
 
-print("Deployment files created:")
-print("- streamlit_app_corrected.py")
-print("- requirements.txt") 
-print("- README.md")
-print("- biomass_compositions.xlsx (already exists)")
+# Show final requirements.txt
+with open('requirements.txt', 'r') as f:
+    final_requirements = f.read()
+    
 print("\
-Missing: regressor_bootstrap.pkl (trained model)")
+Final requirements.txt:")
+print(final_requirements)

@@ -83,6 +83,7 @@ with col2:
     st.metric("Cenizas (%)", f"{fila_biomasa['Ash [%] _norm']:.2f}")
     st.metric("Materia volátil (%)", f"{fila_biomasa['VM [%] _norm']:.2f}")
     st.metric("Carbono fijo (%)", f"{fila_biomasa['FC [%] _norm']:.2f}")
+    st.metric("Poder calorífico biomasa (%)", f"{fila_biomasa['Biomass Energy Content (LHV) [MJ/kg]']:.2f}")
 
 # Botón de predicción
 if st.button("Predecir composición de syngas"):

@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import matplotlib.pyplot as plt  # <-- Import necesario
 
 # --- Estilos personalizados ---
 st.markdown("""
@@ -92,14 +93,12 @@ st.write("Predice la composición del syngas basado en las propiedades intrínse
 
 # Parámetros de entrada
 st.sidebar.header("Parámetros de entrada")
-
 biomasa_nombres = df_biomasa["Biomass residue"].tolist()
 biomasa_seleccionada = st.sidebar.selectbox("Selecciona tipo de biomasa:", biomasa_nombres)
 fila_biomasa_original = df_biomasa[df_biomasa["Biomass residue"] == biomasa_seleccionada].iloc[0].copy()
 
 humedad_objetivo = st.sidebar.slider("Humedad intrínseca biomasa (%)", 0.0, 30.0, 10.0, 0.1)
 temperatura = st.sidebar.slider("Temperatura (°C)", 600, 1000, 800, 10)
-
 tipo_agente = st.sidebar.selectbox("Agente gasificante:", ["Aire", "Oxígeno", "Vapor de agua"])
 
 abr_range_air = np.round(np.linspace(0.14, 0.30, num=3), 2)
@@ -132,34 +131,20 @@ with col2:
     st.metric("Materia volátil (wt%)", f"{fila_biomasa['VM [%] _norm']:.2f}")
     st.metric("Carbono fijo (wt%)", f"{fila_biomasa['FC [%] _norm']:.2f}")
     lhv_mostrado = calcular_lhv(
-        fila_biomasa['C_norm'],
-        fila_biomasa['H_norm'],
-        fila_biomasa['O_norm'],
-        fila_biomasa['N_norm'],
-        fila_biomasa['S_norm'],
-        fila_biomasa['Ash [%] _norm'],
+        fila_biomasa['C_norm'], fila_biomasa['H_norm'], fila_biomasa['O_norm'],
+        fila_biomasa['N_norm'], fila_biomasa['S_norm'], fila_biomasa['Ash [%] _norm'],
         humedad_objetivo
     )
     st.metric("Poder calorífico biomasa (LHV) [MJ/kg]", f"{lhv_mostrado:.2f}")
 
-# Gráfico de pastel - Composición de la biomasa
+# Gráfico de pastel - composición de biomasa
 st.subheader("Distribución elementos (wt%) - Biomasa")
-composicion_biomasa = {
-    "C": fila_biomasa['C_norm'],
-    "H": fila_biomasa['H_norm'],
-    "O": fila_biomasa['O_norm'],
-    "N": fila_biomasa['N_norm'],
-    "S": fila_biomasa['S_norm'],
-    "Cl": fila_biomasa['Cl_norm'],
-    "Ash": fila_biomasa['Ash [%] _norm'],
-    "VM": fila_biomasa['VM [%] _norm'],
-    "FC": fila_biomasa['FC [%] _norm']
-}
-df_pie_biomasa = pd.DataFrame({
-    'Elemento': composicion_biomasa.keys(),
-    'Fracción': composicion_biomasa.values()
-})
-st.pyplot(df_pie_biomasa.set_index('Elemento').plot.pie(y='Fracción', autopct='%1.1f%%', legend=False, ylabel='').figure)
+labels = list(composicion_biomasa.keys())
+sizes = list(composicion_biomasa.values())
+fig1, ax1 = plt.subplots()
+ax1.pie(sizes, labels=labels, autopct='%1.1f%%')
+ax1.axis('equal')
+st.pyplot(fig1)
 
 # Botón de predicción
 if st.button("Predecir composición syngas"):
@@ -186,19 +171,17 @@ if st.button("Predecir composición syngas"):
         h2, co, ch4 = prediccion[0]
 
         st.success("Predicción completada")
-
         col1, col2, col3 = st.columns(3)
         with col1: st.metric("CH₄ (mol%)", f"{ch4:.2f}")
         with col2: st.metric("CO (mol%)", f"{co:.2f}")
         with col3: st.metric("H₂ (mol%)", f"{h2:.2f}")
 
-        # Gráfico de pastel - Composición syngas predicha
+        # Gráfico de pastel syngas
         st.subheader("Composición predicha del syngas (mol%)")
-        df_syngas = pd.DataFrame({
-            'Componente': ['CH₄', 'CO', 'H₂'],
-            'Fracción': [ch4, co, h2]
-        })
-        st.pyplot(df_syngas.set_index('Componente').plot.pie(y='Fracción', autopct='%1.1f%%', legend=False, ylabel='').figure)
+        fig2, ax2 = plt.subplots()
+        ax2.pie([ch4, co, h2], labels=["CH₄", "CO", "H₂"], autopct='%1.1f%%')
+        ax2.axis("equal")
+        st.pyplot(fig2)
 
         h2_co = h2 / co if co != 0 else 0
         fuel_energy = (0.126 * h2) + (0.108 * co) + (0.358 * ch4) + ((h2 / 100) * 1.2 * 2.45)

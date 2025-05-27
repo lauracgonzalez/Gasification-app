@@ -3,6 +3,18 @@ import pandas as pd
 import numpy as np
 import joblib
 
+# --- Estilos personalizados ---
+st.markdown("""
+    <style>
+    html, body, [class*="css"]  {
+        font-size: 18px;
+    }
+    .stSlider > div[data-baseweb="slider"] > div {
+        background-color: green !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Cargar el modelo entrenado
 try:
     modelo = joblib.load("regressor_bootstrap.pkl")
@@ -130,6 +142,25 @@ with col2:
     )
     st.metric("Poder calorífico biomasa (LHV) [MJ/kg]", f"{lhv_mostrado:.2f}")
 
+ Gráfico de pastel - Composición de la biomasa
+st.subheader("Distribución elementos (wt%) - Biomasa")
+composicion_biomasa = {
+    "C": fila_biomasa['C_norm'],
+    "H": fila_biomasa['H_norm'],
+    "O": fila_biomasa['O_norm'],
+    "N": fila_biomasa['N_norm'],
+    "S": fila_biomasa['S_norm'],
+    "Cl": fila_biomasa['Cl_norm'],
+    "Ash": fila_biomasa['Ash [%] _norm'],
+    "VM": fila_biomasa['VM [%] _norm'],
+    "FC": fila_biomasa['FC [%] _norm']
+}
+df_pie_biomasa = pd.DataFrame({
+    'Elemento': composicion_biomasa.keys(),
+    'Fracción': composicion_biomasa.values()
+})
+st.pyplot(df_pie_biomasa.set_index('Elemento').plot.pie(y='Fracción', autopct='%1.1f%%', legend=False, ylabel='').figure)
+
 # Botón de predicción
 if st.button("Predecir composición syngas"):
     entrada = pd.DataFrame([{
@@ -160,6 +191,14 @@ if st.button("Predecir composición syngas"):
         with col1: st.metric("CH₄ (mol%)", f"{ch4:.2f}")
         with col2: st.metric("CO (mol%)", f"{co:.2f}")
         with col3: st.metric("H₂ (mol%)", f"{h2:.2f}")
+
+   # Gráfico de pastel - Composición syngas predicha
+    st.subheader("Composición predicha del syngas (mol%)")
+    df_syngas = pd.DataFrame({
+        'Componente': ['CH₄', 'CO', 'H₂'],
+        'Fracción': [ch4, co, h2]
+    })
+    st.pyplot(df_syngas.set_index('Componente').plot.pie(y='Fracción', autopct='%1.1f%%', legend=False, ylabel='').figure)
 
         h2_co = h2 / co if co != 0 else 0
         fuel_energy = (0.126 * h2) + (0.108 * co) + (0.358 * ch4) + ((h2 / 100) * 1.2 * 2.45)

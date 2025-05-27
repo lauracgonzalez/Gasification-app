@@ -147,6 +147,21 @@ ax1.pie(sizes, labels=labels, autopct='%1.1f%%')
 ax1.axis('equal')
 st.pyplot(fig1)
 
+# Gráfico de pastel
+st.subheader("Distribución composición análisis próximo (wt%) - Biomasa")
+composicion_biomasa = {
+    "FC": fila_biomasa["FC [%] _norm"],
+    "VM": fila_biomasa["VM [%] _norm"],
+    "Cenizas": fila_biomasa["Ash [%] _norm"],
+    "Humedad": humedad_objetivo
+}
+labels = list(composicion_biomasa.keys())
+sizes = list(composicion_biomasa.values())
+fig1, ax1 = plt.subplots()
+ax1.pie(sizes, labels=labels, autopct='%1.1f%%')
+ax1.axis('equal')
+st.pyplot(fig1)
+
 # Botón de predicción
 if st.button("Predecir composición syngas"):
     entrada = pd.DataFrame([{

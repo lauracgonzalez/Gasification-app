@@ -3,7 +3,7 @@ import pandas as pd
 import joblib
 
 # Cargar modelo entrenado
-modelo = joblib.load("modelo_entrenado.pkl")
+modelo = joblib.load("regressor_bootstrap.pkl")
 
 # Composiciones base de biomasas (ejemplo)
 df_biomasa = pd.read_xlsx("biomass_compositions.xlsx") 

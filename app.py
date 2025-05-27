@@ -192,13 +192,7 @@ if st.button("Predecir composición syngas"):
         with col2: st.metric("CO (mol%)", f"{co:.2f}")
         with col3: st.metric("CH₄ (mol%)", f"{ch4:.2f}")
 
-        # Gráfico de pastel syngas
-        st.subheader("Composición del syngas (mol%)")
-        fig2, ax2 = plt.subplots()
-        ax2.pie([h2, co, ch4], labels=["H₂","CO","CH₄"], autopct='%1.1f%%')
-        ax2.axis("equal")
-        st.pyplot(fig2)
-
+      
         h2_co = h2 / co if co != 0 else 0
         fuel_energy = (0.126 * h2) + (0.108 * co) + (0.358 * ch4) + ((h2 / 100) * 1.2 * 2.45)
         aplicacion = sugerir_aplicacion(h2_co, fuel_energy)

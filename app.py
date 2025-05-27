@@ -10,9 +10,6 @@ st.markdown("""
     html, body, [class*="css"]  {
         font-size: 18px;
     }
-    .stSlider > div[data-baseweb="slider"] > div {
-        background-color: green !important;
-    }
     </style>
 """, unsafe_allow_html=True)
 

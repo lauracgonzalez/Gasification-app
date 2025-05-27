@@ -75,8 +75,8 @@ def sugerir_aplicacion(h2_co, fuel_energy):
         return "Other"
 
 # --- Interfaz ---
-st.title("Predictor de Composición de Syngas")
-st.write("Predice la composición del syngas basado en propiedades intrínsecas de la biomasa y condiciones de gasificación")
+st.title("Predictor para la composición del gas de sintesís")
+st.write("Predice la composición del syngas basado en las propiedades intrínsecas de la biomasa y condiciones de gasificación")
 
 # Parámetros de entrada
 st.sidebar.header("Parámetros de entrada")
@@ -85,10 +85,10 @@ biomasa_nombres = df_biomasa["Biomass residue"].tolist()
 biomasa_seleccionada = st.sidebar.selectbox("Selecciona tipo de biomasa:", biomasa_nombres)
 fila_biomasa_original = df_biomasa[df_biomasa["Biomass residue"] == biomasa_seleccionada].iloc[0].copy()
 
-humedad_objetivo = st.sidebar.slider("Humedad objetivo (%)", 0.0, 30.0, 10.0, 0.1)
+humedad_objetivo = st.sidebar.slider("Humedad intrínseca biomasa (%)", 0.0, 30.0, 10.0, 0.1)
 temperatura = st.sidebar.slider("Temperatura (°C)", 600, 1000, 800, 10)
 
-tipo_agente = st.sidebar.selectbox("Tipo de agente gasificante:", ["Aire", "Oxígeno", "Vapor de agua"])
+tipo_agente = st.sidebar.selectbox("Agente gasificante:", ["Aire", "Oxígeno", "Vapor de agua"])
 
 abr_range_air = np.round(np.linspace(0.14, 0.30, num=3), 2)
 abr_range_oxygen = np.round(np.linspace(0.2, 0.4, num=3), 2)
@@ -97,7 +97,7 @@ sbr_range = np.round(np.linspace(0.84, 1.1, num=3), 2)
 if tipo_agente == "Aire":
     ratio_agente = st.sidebar.selectbox("ABR (aire/biomasa)", abr_range_air)
 elif tipo_agente == "Oxígeno":
-    ratio_agente = st.sidebar.selectbox("ABR (O2/biomasa)", abr_range_oxygen)
+    ratio_agente = st.sidebar.selectbox("ABR (oxígeno/biomasa)", abr_range_oxygen)
 else:
     ratio_agente = st.sidebar.selectbox("SBR (vapor/biomasa)", sbr_range)
 
@@ -106,19 +106,19 @@ fila_biomasa = rebalance_composition(fila_biomasa_original.copy(), humedad_objet
 fracciones_agente = calcular_fracciones_agente(tipo_agente, ratio_agente)
 
 # Mostrar composición rebalanceada
-st.subheader("Composición de biomasa rebalanceada")
+st.subheader("Composición análisis último y próximo biomasa")
 col1, col2 = st.columns(2)
 with col1:
-    st.metric("Carbono (%)", f"{fila_biomasa['C_norm']:.2f}")
-    st.metric("Hidrógeno (%)", f"{fila_biomasa['H_norm']:.2f}")
-    st.metric("Oxígeno (%)", f"{fila_biomasa['O_norm']:.2f}")
-    st.metric("Nitrógeno (%)", f"{fila_biomasa['N_norm']:.2f}")
-    st.metric("Azufre (%)", f"{fila_biomasa['S_norm']:.2f}")
-    st.metric("Cloruro (%)", f"{fila_biomasa['Cl_norm']:.2f}")
+    st.metric("Carbono (wt%)", f"{fila_biomasa['C_norm']:.2f}")
+    st.metric("Hidrógeno (wt%)", f"{fila_biomasa['H_norm']:.2f}")
+    st.metric("Oxígeno (wt%)", f"{fila_biomasa['O_norm']:.2f}")
+    st.metric("Nitrógeno (wt%)", f"{fila_biomasa['N_norm']:.2f}")
+    st.metric("Azufre (wt%)", f"{fila_biomasa['S_norm']:.2f}")
+    st.metric("Cloro (wt%)", f"{fila_biomasa['Cl_norm']:.2f}")
 with col2:
-    st.metric("Cenizas (%)", f"{fila_biomasa['Ash [%] _norm']:.2f}")
-    st.metric("Materia volátil (%)", f"{fila_biomasa['VM [%] _norm']:.2f}")
-    st.metric("Carbono fijo (%)", f"{fila_biomasa['FC [%] _norm']:.2f}")
+    st.metric("Cenizas (wt%)", f"{fila_biomasa['Ash [%] _norm']:.2f}")
+    st.metric("Materia volátil (wt%)", f"{fila_biomasa['VM [%] _norm']:.2f}")
+    st.metric("Carbono fijo (wt%)", f"{fila_biomasa['FC [%] _norm']:.2f}")
     lhv_mostrado = calcular_lhv(
         fila_biomasa['C_norm'],
         fila_biomasa['H_norm'],
@@ -131,7 +131,7 @@ with col2:
     st.metric("Poder calorífico biomasa (LHV) [MJ/kg]", f"{lhv_mostrado:.2f}")
 
 # Botón de predicción
-if st.button("Predecir composición de syngas"):
+if st.button("Predecir composición syngas"):
     entrada = pd.DataFrame([{
         'Gasification temperature [°C]': temperatura,
         'O2_gasifying agent (wt/wt)': fracciones_agente["O2"],
@@ -157,15 +157,15 @@ if st.button("Predecir composición de syngas"):
         st.success("Predicción completada")
 
         col1, col2, col3 = st.columns(3)
-        with col1: st.metric("CH₄ (%)", f"{ch4:.2f}")
-        with col2: st.metric("CO (%)", f"{co:.2f}")
-        with col3: st.metric("H₂ (%)", f"{h2:.2f}")
+        with col1: st.metric("CH₄ (mol%)", f"{ch4:.2f}")
+        with col2: st.metric("CO (mol%)", f"{co:.2f}")
+        with col3: st.metric("H₂ (mol%)", f"{h2:.2f}")
 
         h2_co = h2 / co if co != 0 else 0
         fuel_energy = (0.126 * h2) + (0.108 * co) + (0.358 * ch4) + ((h2 / 100) * 1.2 * 2.45)
         aplicacion = sugerir_aplicacion(h2_co, fuel_energy)
 
-        st.subheader("Análisis del syngas")
+        st.subheader("Predicción aplicación final syngas")
         col1, col2 = st.columns(2)
         with col1: st.metric("Relación H₂/CO", f"{h2_co:.2f}")
         with col2: st.metric("Contenido energético [MJ/m³]", f"{fuel_energy:.2f}")

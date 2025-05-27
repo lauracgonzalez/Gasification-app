@@ -137,8 +137,6 @@ composicion_biomasa = {
     "H": fila_biomasa["H_norm"],
     "O": fila_biomasa["O_norm"],
     "N + S + Cl": fila_biomasa["N_norm"] + fila_biomasa["S_norm"] + fila_biomasa["Cl_norm"],
-    "S": fila_biomasa["S_norm"],
-    "Cl": fila_biomasa["Cl_norm"],
     "Cenizas": fila_biomasa["Ash [%] _norm"],
     "Humedad": humedad_objetivo
 }

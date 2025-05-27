@@ -2,15 +2,25 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# Cargar modelo entrenado
-modelo = joblib.load("regressor_bootstrap.pkl")
+# Load trained model (you'll need to upload this file)
+try:
+    modelo = joblib.load("regressor_bootstrap.pkl")
+except FileNotFoundError:
+    st.error("Model file 'regressor_bootstrap.pkl' not found. Please upload the model file.")
+    st.stop()
 
 # Composiciones base de biomasas (ejemplo)
 df_biomasa = pd.read_excel("biomass_compositions.xlsx") 
+print("Current column names:")
+print(df_biomasa.columns.tolist())
 
 # --- Funciones necesarias ---
+# --- Required Functions ---
 def rebalancear_composicion(fila_biomasa, humedad_objetivo):
-    seco = fila_biomasa[["C", "H", "O", "N", "S", "Ash", "VM", "FC"]] * (1 - humedad_objetivo / 100)
+    # Map the correct column names from the Excel file
+    seco = fila_biomasa[["C_norm", "H_norm", "O_norm", "N_norm", "S_norm", "Ash [%] _norm", "VM [%] _norm", "FC [%] _norm"]] * (1 - humedad_objetivo / 100)
+    # Rename columns to match model expectations
+    seco.index = ["C", "H", "O", "N", "S", "Ash", "VM", "FC"]
     h2o = pd.Series([humedad_objetivo], index=["Humedad"])
     return pd.concat([seco, h2o])
     
@@ -36,28 +46,52 @@ def sugerir_aplicacion(h2_co, fuel_energy):
     else:
         return "Other"
 
-# --- Interfaz ---
-st.title("Predicción de composición de Syngas a partir de condiciones de gasificación")
+# --- Interfaz ---st.title("Predictor de Composición de Syngas")
+st.title("Predictor de Composición de Syngas")
+st.write("Predice la composición del syngas basado en biomasa y condiciones de gasificación")
 
-# Selección de biomasa
-biomasa_sel = st.selectbox("Seleccione una biomasa", df_biomasa["Biomasa"].unique())
-composicion = df_biomasa[df_biomasa["Biomasa"] == biomasa_sel].iloc[0]
+# Sidebar for inputs
+st.sidebar.header("Parámetros de entrada")
 
-# Parámetros de entrada
-temperatura = st.slider("Temperatura de gasificación (°C)", 600, 800, 1000)
-humedad = st.slider("Contenido de humedad (%)", 0, 5, 15, 20, 25)
-agente = st.selectbox("Tipo de agente gasificante", ["Aire", "Oxígeno", "Vapor de agua"])
-ratio = st.slider("Relación de alimentación (ER/SBR/ABR)", 0.1, 1.5, 0.4)
+# Biomass selection
+biomasa_nombres = df_biomasa["Biomass residue"].tolist()
+biomasa_seleccionada = st.sidebar.selectbox("Selecciona tipo de biomasa:", biomasa_nombres)
 
-# Botón de predicción
+# Get selected biomass composition
+fila_biomasa = df_biomasa[df_biomasa["Biomass residue"] == biomasa_seleccionada].iloc[0]
+
+# Process parameters
+humedad_objetivo = st.sidebar.slider("Humedad objetivo (%)", 0.0, 50.0, 10.0, 0.1)
+temperatura = st.sidebar.slider("Temperatura (°C)", 600, 1000, 800, 10)
+
+# Gasifying agent
+tipo_agente = st.sidebar.selectbox("Tipo de agente gasificante:", 
+                                  ["Aire", "Oxígeno", "Vapor de agua", "Mezcla O2 + H2O"])
+ratio_agente = st.sidebar.slider("Ratio agente/biomasa", 0.1, 3.0, 1.0, 0.1)
+
+# Show current biomass composition
+st.subheader("Composición de biomasa seleccionada")
+col1, col2 = st.columns(2)
+with col1:
+    st.metric("Carbono (%)", f"{fila_biomasa['C_norm']:.2f}")
+    st.metric("Hidrógeno (%)", f"{fila_biomasa['H_norm']:.2f}")
+    st.metric("Oxígeno (%)", f"{fila_biomasa['O_norm']:.2f}")
+    st.metric("Nitrógeno (%)", f"{fila_biomasa['N_norm']:.2f}")
+with col2:
+    st.metric("Azufre (%)", f"{fila_biomasa['S_norm']:.2f}")
+    st.metric("Cenizas (%)", f"{fila_biomasa['Ash [%] _norm']:.2f}")
+    st.metric("Materia volátil (%)", f"{fila_biomasa['VM [%] _norm']:.2f}")
+    st.metric("Carbono fijo (%)", f"{fila_biomasa['FC [%] _norm']:.2f}")
+
+# Prediction button
 if st.button("Predecir composición de syngas"):
-    # Rebalancear
-    comp = rebalancear_composicion(fila, humedad)
-
-    # Calcular fracciones del agente
-    fracciones = calcular_fracciones_agente(agente, ratio)
-
-    # Crear DataFrame de entrada al modelo
+    # Rebalance composition with target moisture
+    comp_rebalanceada = rebalancear_composicion(fila_biomasa, humedad_objetivo)
+    
+    # Calculate gasifying agent fractions
+    fracciones = calcular_fracciones_agente(tipo_agente, ratio_agente)
+    
+    # Prepare input for model
     entrada = pd.DataFrame([{
         "C_norm": comp_rebalanceada["C"],
         "H_norm": comp_rebalanceada["H"],
@@ -74,21 +108,37 @@ if st.button("Predecir composición de syngas"):
         "H2O": fracciones["H2O"]
     }])
 
-    # Predecir
-    prediccion = modelo.predict(entrada)
-    ch4, co, h2 = prediccion[0]
+    # Predict
+    try:
+        prediccion = modelo.predict(entrada)
+        ch4, co, h2 = prediccion[0]
 
-    # Mostrar resultados
-    st.success("Predicción completada")
-    st.metric("CH₄ (%)", f"{ch4:.2f}")
-    st.metric("CO (%)", f"{co:.2f}")
-    st.metric("H₂ (%)", f"{h2:.2f}")
+        # Show results
+        st.success("Predicción completada")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("CH₄ (%)", f"{ch4:.2f}")
+        with col2:
+            st.metric("CO (%)", f"{co:.2f}")
+        with col3:
+            st.metric("H₂ (%)", f"{h2:.2f}")
 
-    # Calcular indicadores para aplicación
-    h2_co = h2 / co if co != 0 else 0
-    fuel_energy = (0.126 * h2) + (0.108 * co) + (0.358 * ch4) + ((h2 / 100) * 1.2 * 2.45)
+        # Calculate indicators for application
+        h2_co = h2 / co if co != 0 else 0
+        fuel_energy = (0.126 * h2) + (0.108 * co) + (0.358 * ch4) + ((h2 / 100) * 1.2 * 2.45)
 
-    aplicacion = sugerir_aplicacion(h2_co, fuel_energy)
-    st.metric("Relación H₂/CO", f"{h2_co:.2f}")
-    st.metric("Contenido energético [MJ/m³]", f"{fuel_energy:.2f}")
-    st.info(f"**Aplicación recomendada del syngas:** {aplicacion}")
+        aplicacion = sugerir_aplicacion(h2_co, fuel_energy)
+        
+        st.subheader("Análisis del syngas")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Relación H₂/CO", f"{h2_co:.2f}")
+        with col2:
+            st.metric("Contenido energético [MJ/m³]", f"{fuel_energy:.2f}")
+        
+        st.info(f"**Aplicación recomendada del syngas:** {aplicacion}")
+        
+    except Exception as e:
+        st.error(f"Error en la predicción: {str(e)}")
+        st.write("Verifique que el modelo sea compatible con las características de entrada.")

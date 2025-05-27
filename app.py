@@ -131,7 +131,7 @@ with col2:
     st.metric("Poder calorífico biomasa (LHV) [MJ/kg]", f"{lhv_mostrado:.2f}")
 
 # Gráfico de pastel
-st.subheader("Distribución elementos (wt%) - Biomasa")
+st.subheader("Distribución composición análisis último (wt%) - Biomasa")
 composicion_biomasa = {
     "C": fila_biomasa["C_norm"],
     "H": fila_biomasa["H_norm"],
@@ -139,7 +139,8 @@ composicion_biomasa = {
     "N": fila_biomasa["N_norm"],
     "S": fila_biomasa["S_norm"],
     "Cl": fila_biomasa["Cl_norm"],
-    "Ash": fila_biomasa["Ash [%] _norm"]
+    "Cenizas": fila_biomasa["Ash [%] _norm"]
+    "Humedad": humedad_objetivo
 }
 labels = list(composicion_biomasa.keys())
 sizes = list(composicion_biomasa.values())

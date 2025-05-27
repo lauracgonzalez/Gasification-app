@@ -152,7 +152,7 @@ if st.button("Predecir composición de syngas"):
 
     try:
         prediccion = modelo.predict(entrada)
-        ch4, co, h2 = prediccion[0]
+        h2, co, ch4 = prediccion[0]
 
         st.success("Predicción completada")
 

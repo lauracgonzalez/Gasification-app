@@ -1,5 +1,42 @@
-streamlit
+# Create a requirements.txt file for deployment
+requirements = """streamlit
 pandas
-openpyxl
-scikit-learn
 joblib
+numpy
+openpyxl
+"""
+
+with open('requirements.txt', 'w') as f:
+    f.write(requirements)
+
+# Create a simple README for deployment instructions
+readme = """# Syngas Composition Predictor
+
+## Files needed for deployment:
+1. streamlit_app_corrected.py (main app)
+2. biomass_compositions.xlsx (biomass data)
+3. regressor_bootstrap.pkl (trained model - NOT PROVIDED)
+4. requirements.txt (dependencies)
+
+## To deploy:
+1. Upload all files to your Streamlit deployment platform
+2. Make sure regressor_bootstrap.pkl is included
+3. Run: streamlit run streamlit_app_corrected.py
+
+## Fixed issues:
+- Column name mapping (C_norm → C, etc.)
+- Complete sugerir_aplicacion() function
+- Error handling for missing model file
+- Proper encoding and structure
+"""
+
+with open('README.md', 'w', encoding='utf-8') as f:
+    f.write(readme)
+
+print("Deployment files created:")
+print("- streamlit_app_corrected.py")
+print("- requirements.txt") 
+print("- README.md")
+print("- biomass_compositions.xlsx (already exists)")
+print("\
+Missing: regressor_bootstrap.pkl (trained model)")

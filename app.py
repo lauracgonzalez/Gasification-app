@@ -76,9 +76,10 @@ with col1:
     st.metric("Carbono (%)", f"{fila_biomasa['C_norm']:.2f}")
     st.metric("Hidrógeno (%)", f"{fila_biomasa['H_norm']:.2f}")
     st.metric("Oxígeno (%)", f"{fila_biomasa['O_norm']:.2f}")
+    
+with col2:
     st.metric("Nitrógeno (%)", f"{fila_biomasa['N_norm']:.2f}")
     st.metric("Azufre (%)", f"{fila_biomasa['S_norm']:.2f}")
-with col2:
     st.metric("Cloruro (%)", f"{fila_biomasa['Cl_norm']:.2f}")
     st.metric("Cenizas (%)", f"{fila_biomasa['Ash [%] _norm']:.2f}")
     st.metric("Materia volátil (%)", f"{fila_biomasa['VM [%] _norm']:.2f}")

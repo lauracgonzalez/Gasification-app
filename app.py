@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import joblib
 import matplotlib.pyplot as plt
+from PIL import Image
 
 # --- Estilos personalizados ---
 st.markdown("""
@@ -15,6 +16,14 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
+# Mostrar imagen de logo o encabezado
+try:
+    imagen_path = "872c2407-b3dd-4f7e-87fa-9efc70b18f49.png"
+    imagen = Image.open(imagen_path)
+    st.image(imagen, use_column_width=True)
+except Exception as e:
+    st.warning(f"No se pudo cargar la imagen: {e}")
 
 # Cargar el modelo entrenado
 try:
